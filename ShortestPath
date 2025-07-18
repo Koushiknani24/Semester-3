@@ -1,0 +1,153 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// Structure to represent a student
+struct Student {
+    int id;                     // Unique ID for the student
+    char name[50];             // Name of the student
+    struct Student *left;      // Pointer to the left child
+    struct Student *right;     // Pointer to the right child
+};
+
+// Function to create a new student node
+struct Student* createStudent(int id, char *name) {
+    struct Student* newStudent = (struct Student*)malloc(sizeof(struct Student));
+    newStudent->id = id;
+    strcpy(newStudent->name, name);
+    newStudent->left = newStudent->right = NULL;
+    return newStudent;
+}
+
+// Function to insert a student into the BST
+struct Student* insert(struct Student* root, int id, char *name) {
+    if (root == NULL) {
+        return createStudent(id, name);
+    }
+    if (id < root->id) {
+        root->left = insert(root->left, id, name);
+    } else if (id > root->id) {
+        root->right = insert(root->right, id, name);
+    }
+    return root;
+}
+
+// Function to search for a student by ID in the BST
+struct Student* search(struct Student* root, int id) {
+    if (root == NULL || root->id == id) {
+        return root;
+    }
+    if (id < root->id) {
+        return search(root->left, id);
+    }
+    return search(root->right, id);
+}
+
+// Function to find the minimum value node in the BST
+struct Student* findMin(struct Student* node) {
+    struct Student* current = node;
+    while (current && current->left != NULL) {
+        current = current->left;
+    }
+    return current;
+}
+
+// Function to delete a student by ID, maintaining BST structure
+struct Student* deleteStudent(struct Student* root, int id) {
+    if (root == NULL) return root;
+    if (id < root->id) {
+        root->left = deleteStudent(root->left, id);
+    } else if (id > root->id) {
+        root->right = deleteStudent(root->right, id);
+    } else {
+        // Node with one child or no child
+        if (root->left == NULL) {
+            struct Student* temp = root->right;
+            free(root);
+            return temp;
+        } else if (root->right == NULL) {
+            struct Student* temp = root->left;
+            free(root);
+            return temp;
+        }
+        // Node with two children: Get the inorder successor (smallest in the right subtree)
+        struct Student* temp = findMin(root->right);
+        root->id = temp->id;
+        strcpy(root->name, temp->name);
+        root->right = deleteStudent(root->right, temp->id);
+    }
+    return root;
+}
+
+// Function to print student details
+void printStudent(struct Student* student) {
+    if (student != NULL) {
+        printf("ID: %d, Name: %s\n", student->id, student->name);
+    } else {
+        printf("Student not found.\n");
+    }
+}
+
+// Function for in-order traversal of the BST
+void inOrderTraversal(struct Student* root) {
+    if (root != NULL) {
+        inOrderTraversal(root->left);
+        printf("ID: %d, Name: %s\n", root->id, root->name);
+        inOrderTraversal(root->right);
+    }
+}
+
+// Main function with menu-driven interface
+int main() {
+    struct Student* root = NULL;
+    int choice, id;
+    char name[50];
+
+    // Inserting 10 student records from user input
+    printf("=== Insert 10 Student Records ===\n");
+    for (int i = 0; i < 10; i++) {
+        printf("Enter Student %d ID: ", i + 1);
+        scanf("%d", &id);
+        printf("Enter Student %d Name: ", i + 1);
+        scanf("%s", name);
+        root = insert(root, id, name);
+        printf("Student with ID %d inserted.\n", id);
+    }
+
+    do {
+        printf("\n=== Student Record Management ===\n");
+        printf("1. Search Student Record\n");
+        printf("2. Delete Student Record\n");
+        printf("3. Display All Records\n");
+        printf("4. Exit\n");
+        printf("Choose an option (1-4): ");
+        scanf("%d", &choice);
+
+        switch (choice) {
+            case 1:
+                printf("Enter Student ID to search: ");
+                scanf("%d", &id);
+                struct Student* foundStudent = search(root, id);
+                printf("Searching for ID %d:\n", id);
+                printStudent(foundStudent);
+                break;
+            case 2:
+                printf("Enter Student ID to delete: ");
+                scanf("%d", &id);
+                root = deleteStudent(root, id);
+                printf("Deleted student with ID %d\n", id);
+                break;
+            case 3:
+                printf("All Student Records:\n");
+                inOrderTraversal(root);
+                break;
+            case 4:
+                printf("Exiting...\n");
+                break;
+            default:
+                printf("Invalid option! Please choose again.\n");
+        }
+    } while (choice != 4);
+
+    return 0;
+}
